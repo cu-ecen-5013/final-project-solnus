@@ -1,4 +1,4 @@
-# final-project-JiabinLin12
+# IoT Addressable LED Controller
 This repository contains final project submission for ECEN 5713 AESD by Jiabin Lin and Steve Rizor
 
 # Repository Overview
