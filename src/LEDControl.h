@@ -1,5 +1,5 @@
 /******************************************************************************
- * @file LEDControlObj.h
+ * @file LEDControl.h
  * @brief LED Control Object
  * 
  * Contains class definition for the control service object, which is used
@@ -10,10 +10,10 @@
  * @date 4/3/2021
  * 
  *****************************************************************************/
-#ifndef __LED_CONTROL_H__
+#pragma once
 
+#include "logging.h"
 #include <stdint.h>
-
 
 class LEDControl
 {
@@ -35,6 +35,14 @@ public:
         };
     } __attribute__ ((packed)) led_t;
 
+    enum led_color_e
+    {
+        LED_W = 0xFF000000,
+        LED_R = 0x00FF0000,
+        LED_G = 0x0000FF00,
+        LED_B = 0x000000FF
+    } ;
+
     LEDControl(uint16_t led_count)
         :_count(led_count)
     {
@@ -45,12 +53,20 @@ public:
 
     void setIntensity(uint8_t intensity)
     {
+        LOG(LOG_INFO, "Setting intensity to %u", intensity);
         _intensity = intensity;
         // TODO: update output
     }
 
     void setPattern(led_t* leds)
     {
+        LOG(LOG_INFO, "Setting pattern");
+        // TODO update output
+    }
+
+    void setAll(led_color_e color)
+    {
+        LOG(LOG_INFO, "Setting all to color");
         // TODO update output
     }
 
@@ -59,5 +75,3 @@ private:
     uint8_t _intensity = 0;
 
 };
-
-#endif

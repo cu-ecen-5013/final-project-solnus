@@ -8,25 +8,20 @@
  * @date 4/3/2021
  * 
  *****************************************************************************/
-#include "LEDControlObj.h"
+#include "logging.h"
+#include "LEDControl.h"
 
 #include <getopt.h>
 #include <syslog.h>
+#include <unistd.h>
 #include <iostream>
 
 using std::cout;
 using std::endl;
 
-// Macros
-#define LOG(level, message, ...) {if((level <= LOG_INFO) || _verbose) syslog(level, message, ##__VA_ARGS__);\
-                                  if(_veryVerbose) printf(message "\n", ##__VA_ARGS__);}
-
-
 // Options
 static bool _daemon = false;
 static uint32_t _ledCount = 0;
-static bool _verbose = false;
-static bool _veryVerbose = false;
 static const char* _exe = nullptr;
 
 // Forward-declarations
@@ -50,6 +45,26 @@ int main(const int argc, char* const* argv)
         closelog();
         exit(1);
     }
+
+    // Daemonize if necessary
+    if(_daemon)
+    {
+        int ret = daemon(0, _veryVerbose);
+        if(ret != 0)
+        {
+            LOG(LOG_ERR, "Failed to daemonize");
+            closelog();
+            exit(1);
+        }
+
+        LOG(LOG_DEBUG, "Daemonized");
+    }
+
+    LEDControl ctrlObj(_ledCount);
+    ctrlObj.setAll(LEDControl::LED_R);
+
+    // TODO sleep until something happens
+    // TODO implement signal handling for shutdown
 
     LOG(LOG_INFO, "Stopping service");
     return 0;

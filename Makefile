@@ -9,7 +9,7 @@ ifeq ($(CXX),)
 endif
 
 ifeq ($(CXXFLAGS),)
-	CXXFLAGS = -Wall -Werror
+	CXXFLAGS = -Wall -Werror -std=c++17
 endif
 
 all: $(BUILD_DIR) $(BIN_FILE)
