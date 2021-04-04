@@ -8,8 +8,8 @@ ifeq ($(CXX),)
 	CXX = g++
 endif
 
-ifeq ($(CXXFLAGS),)
-	CXXFLAGS = -Wall -Werror -std=c++17
+ifeq ($(EXTRA_CXXFLAGS),)
+	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17
 endif
 
 all: $(BUILD_DIR) $(BIN_FILE)
