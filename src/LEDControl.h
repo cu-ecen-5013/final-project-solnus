@@ -22,7 +22,7 @@
 #define TARGET_FREQ             WS2811_TARGET_FREQ
 #define GPIO_PIN                18
 #define DMA                     10
-#define STRIP_TYPE              SK6812_STRIP_GRBW
+#define STRIP_TYPE              WS2811_STRIP_RGB
 
 class LEDControl
 {
@@ -45,7 +45,7 @@ public:
 
     enum led_color_e
     {
-        LED_W = 0x10000000,
+        LED_W = 0x00101010,
         LED_R = 0x00200000,
         LED_G = 0x00002000,
         LED_B = 0x00000020
