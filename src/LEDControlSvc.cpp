@@ -74,11 +74,13 @@ int main(const int argc, char* const* argv)
     signal_handler();
     while(running){
         ctrlObj.setAll(LEDControl::LED_R);
-        usleep(1000000 / 15);
+        sleep(1);
         ctrlObj.setAll(LEDControl::LED_G);
-        usleep(1000000 / 15);
+        sleep(1);
         ctrlObj.setAll(LEDControl::LED_B);
-        usleep(1000000 / 15);
+        sleep(1);
+        ctrlObj.setAll(LEDControl::LED_W);
+        sleep(1);
     }
 
     LOG(LOG_INFO, "Stopping service");

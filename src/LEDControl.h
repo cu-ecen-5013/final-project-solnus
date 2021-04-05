@@ -45,7 +45,7 @@ public:
 
     enum led_color_e
     {
-        LED_W = 0xFF000000,
+        LED_W = 0x10000000,
         LED_R = 0x00200000,
         LED_G = 0x00002000,
         LED_B = 0x00000020
@@ -90,7 +90,7 @@ public:
 
     void setAll(led_color_e color)
     {
-        LOG(LOG_INFO, "Setting all to color");
+        //LOG(LOG_DEBUG, "Setting all to color");
         // TODO update output
         for (int i = 0; i<_count; i++){
             _ledstring.channel[0].leds[i] = color;
