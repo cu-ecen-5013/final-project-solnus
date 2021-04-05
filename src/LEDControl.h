@@ -14,7 +14,7 @@
 
 #include "logging.h"
 #include <stdint.h>
-#include "../rpi_ws281x/ws2811.h"
+#include "rpi_ws281x/ws2811.h"
 #define ARRAY_SIZE(stuff)       (sizeof(stuff) / sizeof(stuff[0]))
 
 // defaults for cmdline options

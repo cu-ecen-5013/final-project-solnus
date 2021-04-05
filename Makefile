@@ -1,7 +1,8 @@
 SRC_DIR := src
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
 BUILD_DIR := build
-OBJS := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
+WSLIB := rpi_ws281x/libws2811.a
+OBJS := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o) $(WSLIB)
 BIN_FILE := $(BUILD_DIR)/LEDControlSvc
 
 ifeq ($(CXX),)
@@ -9,7 +10,7 @@ ifeq ($(CXX),)
 endif
 
 ifeq ($(EXTRA_CXXFLAGS),)
-	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17
+	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17 -I.
 endif
 
 all: $(BUILD_DIR) $(BIN_FILE)
@@ -23,8 +24,12 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 $(BUILD_DIR):
 	mkdir -p $@
 
--include $(OBJS:%.o=%.d)
+$(WSLIB):
+	cd rpi_ws281x && scons
+
+-include $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.d)
 
 .PHONY: clean all
 clean:
 	rm -rdf $(BUILD_DIR)
+	cd rpi_ws281x && scons -c
