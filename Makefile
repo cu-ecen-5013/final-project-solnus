@@ -29,7 +29,7 @@ $(BUILD_DIR):
 	mkdir -p $@
 
 $(WSLIB):
-	cd rpi_ws281x && $(SCONS) V=1
+	cd rpi_ws281x && $(SCONS) V=1 TOOLCHAIN=$(TOOLCHAIN)
 
 -include $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.d)
 
