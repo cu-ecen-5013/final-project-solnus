@@ -90,6 +90,7 @@ public:
     {
         LOG(LOG_INFO, "Setting pattern");
         // TODO update output
+        _render();
     }
 
     void setAll(led_color_e color)
@@ -99,6 +100,7 @@ public:
         for (int i = 0; i<_count; i++){
             _ledstring.channel[0].leds[i] = color;
         }
+        _render();
     }
 
 private:

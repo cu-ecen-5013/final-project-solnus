@@ -82,7 +82,12 @@ int main(const int argc, char* const* argv)
     while(running){
         ctrlObj.setAll(LEDControl::LED_R);
         usleep(1000000 / 15);
+        ctrlObj.setAll(LEDControl::LED_G);
+        usleep(1000000 / 15);
+        ctrlObj.setAll(LEDControl::LED_B);
+        usleep(1000000 / 15);
     }
+
     LOG(LOG_INFO, "Stopping service");
     return 0;
 }
