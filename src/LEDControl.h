@@ -22,7 +22,7 @@
 #define TARGET_FREQ             WS2811_TARGET_FREQ
 #define GPIO_PIN                18
 #define DMA                     10
-#define STRIP_TYPE              WS2811_STRIP_GBR
+#define STRIP_TYPE              SK6812_STRIP_GRBW
 
 class LEDControl
 {
@@ -73,12 +73,12 @@ public:
 
     ~LEDControl() = default;
 
-    void setIntensity(uint8_t intensity)
+    void setIntensity(float intensity)
     {
-        LOG(LOG_INFO, "Setting intensity to %u", intensity);
-        _intensity = intensity;
-        // TODO: update output
+        LOG(LOG_INFO, "Setting intensity to %f", intensity);
+        _intensity = (uint8_t)(intensity * 255);
         _ledstring.channel[0].brightness = _intensity;
+        _render();
     }
 
     void setPattern(led_t* leds)

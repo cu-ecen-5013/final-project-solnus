@@ -67,6 +67,7 @@ int main(const int argc, char* const* argv)
     }
     
     LEDControl ctrlObj(_ledCount);
+    ctrlObj.setIntensity(0.75);
 
     // TODO sleep until something happens
     
