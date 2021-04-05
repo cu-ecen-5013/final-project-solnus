@@ -16,6 +16,7 @@
 #include "rpi_ws281x/ws2811.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define ARRAY_SIZE(stuff)       (sizeof(stuff) / sizeof(stuff[0]))
 
@@ -68,6 +69,8 @@ public:
         _ledstring.channel[0].invert = 0;
         _ledstring.channel[0].brightness = 128;
         _ledstring.channel[0].strip_type = STRIP_TYPE;
+
+        memset(&_ledstring.channel[1], 0, sizeof(_ledstring.channel[1]));
 
         if (ws2811_init(&_ledstring) != WS2811_SUCCESS)
         {
