@@ -74,10 +74,6 @@ int main(const int argc, char* const* argv)
     }
     
     LEDControl ctrlObj(_ledCount);
-    if (ws2811_init(&ctrlObj.ledstring) != WS2811_SUCCESS)
-    {
-        LOG(LOG_ERR, "ws2811_init failed");
-    }
 
     // TODO sleep until something happens
     

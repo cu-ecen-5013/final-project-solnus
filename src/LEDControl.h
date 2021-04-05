@@ -13,8 +13,10 @@
 #pragma once
 
 #include "logging.h"
-#include <stdint.h>
 #include "rpi_ws281x/ws2811.h"
+#include <stdint.h>
+#include <stdlib.h>
+
 #define ARRAY_SIZE(stuff)       (sizeof(stuff) / sizeof(stuff[0]))
 
 // defaults for cmdline options
@@ -32,8 +34,6 @@
 class LEDControl
 {
 public:
-    ws2811_t ledstring;
-
     // LED struct is formatted for easy interop with the rpi_ws2811 library
     typedef struct
     {
@@ -61,13 +61,19 @@ public:
     LEDControl(uint16_t led_count)
         :_count(led_count)
   {
-        ledstring.freq = TARGET_FREQ;
-        ledstring.dmanum = DMA;
-        ledstring.channel[0].gpionum = GPIO_PIN;
-        ledstring.channel[0].count = _count;
-        ledstring.channel[0].invert = 0;
-        ledstring.channel[0].brightness = 128;
-        ledstring.channel[0].strip_type = STRIP_TYPE;
+        _ledstring.freq = TARGET_FREQ;
+        _ledstring.dmanum = DMA;
+        _ledstring.channel[0].gpionum = GPIO_PIN;
+        _ledstring.channel[0].count = _count;
+        _ledstring.channel[0].invert = 0;
+        _ledstring.channel[0].brightness = 128;
+        _ledstring.channel[0].strip_type = STRIP_TYPE;
+
+        if (ws2811_init(&_ledstring) != WS2811_SUCCESS)
+        {
+            LOG(LOG_ERR, "ws2811_init failed");
+            exit(1);
+        }
     }
 
     ~LEDControl() = default;
@@ -77,7 +83,7 @@ public:
         LOG(LOG_INFO, "Setting intensity to %u", intensity);
         _intensity = intensity;
         // TODO: update output
-        ledstring.channel[0].brightness = _intensity;
+        _ledstring.channel[0].brightness = _intensity;
     }
 
     void setPattern(led_t* leds)
@@ -91,12 +97,19 @@ public:
         LOG(LOG_INFO, "Setting all to color");
         // TODO update output
         for (int i = 0; i<_count; i++){
-            ledstring.channel[0].leds[i] = color;
+            _ledstring.channel[0].leds[i] = color;
         }
     }
 
 private:
     uint16_t _count;
     uint8_t _intensity = 0;
+    ws2811_t _ledstring;
+
+    void _render()
+    {
+        ws2811_render(&_ledstring);
+        // TODO add error checking
+    }
 
 };
