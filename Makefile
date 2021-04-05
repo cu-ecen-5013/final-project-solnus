@@ -9,6 +9,10 @@ ifeq ($(CXX),)
 	CXX = g++
 endif
 
+ifeq ($(SCONS),)
+	SCONS = scons
+endif
+
 ifeq ($(EXTRA_CXXFLAGS),)
 	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17 -I.
 endif
@@ -25,7 +29,7 @@ $(BUILD_DIR):
 	mkdir -p $@
 
 $(WSLIB):
-	cd rpi_ws281x && scons
+	cd rpi_ws281x && $(SCONS)
 
 -include $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.d)
 
