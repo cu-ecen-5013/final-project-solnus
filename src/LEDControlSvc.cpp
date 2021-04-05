@@ -21,9 +21,6 @@
 using std::cout;
 using std::endl;
 
-
-
-
 // Options
 static bool _daemon = false;
 static uint32_t _ledCount = 0;
@@ -35,10 +32,6 @@ static void usage();
 static void parseOpts(int argc, char* const* argv);
 static void signal_handler(void);
 static void kill_handler(int signum);
-
-
-
-
 
 
 // Service entry point

@@ -54,6 +54,8 @@ public:
     LEDControl(uint16_t led_count)
         :_count(led_count)
   {
+        memset(&_ledstring, 0, sizeof(_ledstring));
+
         _ledstring.freq = TARGET_FREQ;
         _ledstring.dmanum = DMA;
         _ledstring.channel[0].gpionum = GPIO_PIN;
@@ -61,8 +63,6 @@ public:
         _ledstring.channel[0].invert = 0;
         _ledstring.channel[0].brightness = 255;
         _ledstring.channel[0].strip_type = STRIP_TYPE;
-
-        memset(&_ledstring.channel[1], 0, sizeof(_ledstring.channel[1]));
 
         if (ws2811_init(&_ledstring) != WS2811_SUCCESS)
         {
