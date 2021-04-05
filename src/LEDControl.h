@@ -22,7 +22,7 @@
 #define TARGET_FREQ             WS2811_TARGET_FREQ
 #define GPIO_PIN                18
 #define DMA                     10
-#define STRIP_TYPE              WS2811_STRIP_RGB
+#define STRIP_TYPE              WS2811_STRIP_GRB
 
 class LEDControl
 {
@@ -105,9 +105,9 @@ private:
 
     void _render()
     {
-        LOG(LOG_DEBUG, "Rendering");
+        //LOG(LOG_DEBUG, "Rendering");
         ws2811_render(&_ledstring);
-        LOG(LOG_DEBUG, "Rendered");
+        //LOG(LOG_DEBUG, "Rendered");
         // TODO add error checking
     }
 
