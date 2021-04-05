@@ -8,6 +8,7 @@
  * @date 4/3/2021
  * 
  *****************************************************************************/
+
 #include "logging.h"
 #include "LEDControl.h"
 
@@ -15,18 +16,30 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <iostream>
+#include <signal.h>
 
 using std::cout;
 using std::endl;
+
+
+
 
 // Options
 static bool _daemon = false;
 static uint32_t _ledCount = 0;
 static const char* _exe = nullptr;
+static bool running = true;
 
 // Forward-declarations
 static void usage();
 static void parseOpts(int argc, char* const* argv);
+static void signal_handler(void);
+static void kill_handler(int signum);
+
+
+
+
+
 
 // Service entry point
 int main(const int argc, char* const* argv)
@@ -59,13 +72,21 @@ int main(const int argc, char* const* argv)
 
         LOG(LOG_DEBUG, "Daemonized");
     }
-
+    
     LEDControl ctrlObj(_ledCount);
-    ctrlObj.setAll(LEDControl::LED_R);
+    if (ws2811_init(&ctrlObj.ledstring) != WS2811_SUCCESS)
+    {
+        LOG(LOG_ERR, "ws2811_init failed");
+    }
 
     // TODO sleep until something happens
+    
     // TODO implement signal handling for shutdown
-
+    signal_handler();
+    while(running){
+        ctrlObj.setAll(LEDControl::LED_R);
+        usleep(1000000 / 15);
+    }
     LOG(LOG_INFO, "Stopping service");
     return 0;
 }
@@ -120,4 +141,14 @@ void usage()
     cout << "\t-V\tVery verbose logging (stdout)" << endl;
     cout << "\t-h\tUsage" << endl;
     cout << endl;
+}
+
+static void kill_handler(int signum){
+    running = false;
+}
+static void signal_handler(){
+    struct sigaction sa;
+    sa.sa_handler = &kill_handler,
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
 }
