@@ -18,19 +18,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ARRAY_SIZE(stuff)       (sizeof(stuff) / sizeof(stuff[0]))
-
 // defaults for cmdline options
 #define TARGET_FREQ             WS2811_TARGET_FREQ
 #define GPIO_PIN                18
 #define DMA                     10
-//#define STRIP_TYPE            WS2811_STRIP_RGB		// WS2812/SK6812RGB integrated chip+leds
-#define STRIP_TYPE              WS2811_STRIP_GBR		// WS2812/SK6812RGB integrated chip+leds
-//#define STRIP_TYPE            SK6812_STRIP_RGBW		// SK6812RGBW (NOT SK6812RGB)
-
-#define WIDTH                   1
-#define HEIGHT                  64
-
+#define STRIP_TYPE              WS2811_STRIP_GBR
 
 class LEDControl
 {
@@ -54,9 +46,9 @@ public:
     enum led_color_e
     {
         LED_W = 0xFF000000,
-        LED_R = 0x00FF0000,
-        LED_G = 0x0000FF00,
-        LED_B = 0x000000FF
+        LED_R = 0x00200000,
+        LED_G = 0x00002000,
+        LED_B = 0x00000020
     } ;
 
     LEDControl(uint16_t led_count)
@@ -67,7 +59,7 @@ public:
         _ledstring.channel[0].gpionum = GPIO_PIN;
         _ledstring.channel[0].count = _count;
         _ledstring.channel[0].invert = 0;
-        _ledstring.channel[0].brightness = 128;
+        _ledstring.channel[0].brightness = 255;
         _ledstring.channel[0].strip_type = STRIP_TYPE;
 
         memset(&_ledstring.channel[1], 0, sizeof(_ledstring.channel[1]));
@@ -113,7 +105,9 @@ private:
 
     void _render()
     {
+        LOG(LOG_DEBUG, "Rendering");
         ws2811_render(&_ledstring);
+        LOG(LOG_DEBUG, "Rendered");
         // TODO add error checking
     }
 
