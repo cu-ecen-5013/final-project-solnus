@@ -21,9 +21,6 @@
 using std::cout;
 using std::endl;
 
-
-
-
 // Options
 static bool _daemon = false;
 static uint32_t _ledCount = 0;
@@ -35,10 +32,6 @@ static void usage();
 static void parseOpts(int argc, char* const* argv);
 static void signal_handler(void);
 static void kill_handler(int signum);
-
-
-
-
 
 
 // Service entry point
@@ -74,10 +67,7 @@ int main(const int argc, char* const* argv)
     }
     
     LEDControl ctrlObj(_ledCount);
-    if (ws2811_init(&ctrlObj.ledstring) != WS2811_SUCCESS)
-    {
-        LOG(LOG_ERR, "ws2811_init failed");
-    }
+    ctrlObj.setIntensity(0.75);
 
     // TODO sleep until something happens
     
@@ -85,8 +75,15 @@ int main(const int argc, char* const* argv)
     signal_handler();
     while(running){
         ctrlObj.setAll(LEDControl::LED_R);
-        usleep(1000000 / 15);
+        sleep(1);
+        ctrlObj.setAll(LEDControl::LED_G);
+        sleep(1);
+        ctrlObj.setAll(LEDControl::LED_B);
+        sleep(1);
+        ctrlObj.setAll(LEDControl::LED_W);
+        sleep(1);
     }
+
     LOG(LOG_INFO, "Stopping service");
     return 0;
 }
