@@ -14,7 +14,7 @@
 
 #include "logging.h"
 #include <stdint.h>
-#include "rpi_ws281x/ws2811.h"
+#include "../rpi_ws281x/ws2811.h"
 #define ARRAY_SIZE(stuff)       (sizeof(stuff) / sizeof(stuff[0]))
 
 // defaults for cmdline options
@@ -68,6 +68,10 @@ public:
         ledstring.channel[0].invert = 0;
         ledstring.channel[0].brightness = 128;
         ledstring.channel[0].strip_type = STRIP_TYPE;
+        if (ws2811_init(&ledstring) != WS2811_SUCCESS)
+        {
+            LOG(LOG_ERR, "ws2811_init failed");
+        }
     }
 
     ~LEDControl() = default;
