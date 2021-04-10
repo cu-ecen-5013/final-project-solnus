@@ -1,3 +1,6 @@
 [submodule "rpi_ws281x"]
 	path = rpi_ws281x
 	url = git@github.com:jgarff/rpi_ws281x.git
+[submodule "azure-sdk"]
+	path = azure-sdk
+	url = ./azure-sdk
