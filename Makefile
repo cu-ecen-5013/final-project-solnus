@@ -2,6 +2,7 @@ SRC_DIR := src
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
 BUILD_DIR := build
 WSLIB := rpi_ws281x/libws2811.a
+AZURELIBS := -lumqtt -luamqp -laziotsharedutil -liothub_client -liothub_client_mqtt_ws_transport -liothub_client_mqtt_transport -liothub_service_client
 OBJS := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o) $(WSLIB)
 BIN_FILE := $(BUILD_DIR)/LEDControlSvc
 
@@ -20,7 +21,7 @@ endif
 all: $(BUILD_DIR) $(BIN_FILE)
 
 $(BIN_FILE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(EXTRA_CXXFLAGS) -o $@ $^ $(INCLUDES) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(EXTRA_CXXFLAGS) -o $@ $^ $(INCLUDES) $(LDFLAGS) -L$(STAGING_DIR)/usr/lib $(AZURELIBS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_CXXFLAGS) -c -o $@ -MMD -MT '$@' -MF $(@:%.o=%.d) $<

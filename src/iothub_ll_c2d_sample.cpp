@@ -106,7 +106,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT receive_msg_callback(IOTHUB_MESSAGE_HAND
     return IOTHUBMESSAGE_ACCEPTED;
 }
 
-int main(void)
+int main2(void)
 {
     IOTHUB_CLIENT_TRANSPORT_PROVIDER protocol;
     size_t messages_count = 0;
