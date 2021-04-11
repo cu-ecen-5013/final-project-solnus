@@ -2,7 +2,7 @@ SRC_DIR := src
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
 BUILD_DIR := build
 WSLIB := rpi_ws281x/libws2811.a
-AZURELIBS := -lumqtt -luamqp -laziotsharedutil -liothub_client -liothub_client_mqtt_ws_transport -liothub_client_mqtt_transport -liothub_service_client
+AZURELIBS := -liothub_client_mqtt_transport -liothub_client_amqp_transport -liothub_client_http_transport -liothub_client -lumqtt -lprov_auth_client -lhsm_security_client -luhttp -laziotsharedutil -lparson -luuid -lpthread -lcurl -lssl -lcrypto
 OBJS := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o) $(WSLIB)
 BIN_FILE := $(BUILD_DIR)/LEDControlSvc
 
@@ -15,7 +15,7 @@ ifeq ($(SCONS),)
 endif
 
 ifeq ($(EXTRA_CXXFLAGS),)
-	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17 -I.
+	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17 -I. -I/usr/include/azureiot
 endif
 
 all: $(BUILD_DIR) $(BIN_FILE)
