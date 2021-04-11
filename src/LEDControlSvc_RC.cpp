@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "/home/jiabinlin/Desktop/ECEN5713/application/src/azure-iot-sdk-c/iothub_client/inc/iothub.h"
+#include "iothub.h"
 #include "iothub_device_client_ll.h"
 #include "iothub_client_options.h"
 #include "iothub_message.h"
@@ -37,8 +37,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT receive_msg_callback(IOTHUB_MESSAGE_HAND
         else
         {
             memcpy(user_context,buff_msg,buff_len);
-            user_context[buff_len] = '\0';
-            (void)printf("Received Binary message\r\n Data1: %.*s\r\n", buff_len, (char*)user_context);
+            (void)printf("Received Binary message\r\n Data1: %.*s\r\n", (int)buff_len, (char*)user_context);
         }
     }
     else
@@ -50,7 +49,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT receive_msg_callback(IOTHUB_MESSAGE_HAND
         }
         else
         {
-            memcpy(user_context,string_msg,sizeof(string_msg));
+            memcpy(user_context,string_msg,strlen(string_msg));
             (void)printf("Received String Message\r\nData: %s\r\n", (char*)user_context);
         }
     }

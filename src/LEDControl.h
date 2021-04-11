@@ -50,10 +50,10 @@ public:
         LED_G = 0x00002000,
         LED_B = 0x00000020
     } ;
-
+    
     LEDControl(uint16_t led_count)
         :_count(led_count)
-  {
+    {
         memset(&_ledstring, 0, sizeof(_ledstring));
 
         _ledstring.freq = TARGET_FREQ;
@@ -72,6 +72,22 @@ public:
     }
 
     ~LEDControl() = default;
+    void setNumLED (uint16_t _ledCount)
+    {
+        LOG(LOG_INFO, "Setting number of LED to %d", _ledCount);
+        _count = _ledCount;
+        _ledstring.channel[0].count = _count;
+        _render();
+    }
+
+    void setNewColor (led_t _ledColor)
+    {
+        LOG(LOG_INFO, "Setting new LED color %d", _ledColor.wrgb);
+        for(int i = 0; i<_count; i++){
+            _ledstring.channel[0].leds[i] = _ledColor.wrgb;
+        }
+        _render();
+    }
 
     void setIntensity(float intensity)
     {
@@ -84,13 +100,15 @@ public:
     void setPattern(led_t* leds)
     {
         LOG(LOG_INFO, "Setting pattern");
-        // TODO update output
+        // TODO update output 
+       
+
         _render();
     }
 
     void setAll(led_color_e color)
     {
-        //LOG(LOG_DEBUG, "Setting all to color");
+        LOG(LOG_DEBUG, "Setting all to color");
         // TODO update output
         for (int i = 0; i<_count; i++){
             _ledstring.channel[0].leds[i] = color;
