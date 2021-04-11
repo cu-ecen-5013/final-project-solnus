@@ -65,6 +65,10 @@ int main(const int argc, char* const* argv)
 
         LOG(LOG_DEBUG, "Daemonized");
     }
+    //Pthread device code
+    pthread_t tid;
+     
+
     
     LEDControl ctrlObj(_ledCount);
     ctrlObj.setIntensity(0.75);
