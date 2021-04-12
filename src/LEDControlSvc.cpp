@@ -45,7 +45,7 @@ enum stateOps
 int  state = defulteffect;
 char foo[] = "hello world"; //make complaints revStr is not init.
 void *revStr = foo;
-void *preStr;
+void *preStr = revStr;
 
 // Forward-declarations
 static void usage();
@@ -71,14 +71,14 @@ int main(const int argc, char* const* argv)
     int cpidx = 0;
     LEDControl::led_color_e colorPattern [4] = { LEDControl::LED_R, LEDControl::LED_G,
                                   LEDControl::LED_B, LEDControl::LED_W};
-    iothub_init(&device_ll_handle);
-    iothub_RC_handler(&device_ll_handle,revStr);
-    pthread_t tid;
-    assert(pthread_create(&tid,		    //Store ID of the new thread
-						NULL,		    //Default attribute
-						DeviceRC,	    //Start routine
-						(void *)0)==0); //Arg pass to the start routine
-    
+    if(iothub_init(&device_ll_handle)){
+        iothub_RC_handler(&device_ll_handle,revStr);
+        pthread_t tid;
+        assert(pthread_create(&tid,		    //Store ID of the new thread
+                            NULL,		    //Default attribute
+                            DeviceRC,	    //Start routine
+                            (void *)0)==0); //Arg pass to the start routine
+    }
     while(running){
         switch (state){
             // daemon the program, allow set once
@@ -122,8 +122,9 @@ int main(const int argc, char* const* argv)
 
             default:
                 //no new data  
-                if(preStr == revStr){
+                if(memcmp(revStr,preStr,strlen((char*)preStr))==0){
                     state = defulteffect;
+                    printf("no data received: %s\n", (char*)revStr);
                 }else{
                     printf("new data received: %s\n", (char*)revStr);
                     //to new state state = ?
