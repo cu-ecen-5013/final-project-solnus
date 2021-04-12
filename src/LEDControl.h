@@ -80,11 +80,11 @@ public:
         _render();
     }
 
-    void setNewColor (led_t _ledColor)
+    void setNewColor (uint32_t _ledColor)
     {
-        LOG(LOG_INFO, "Setting new LED color %d", _ledColor.wrgb);
+        LOG(LOG_INFO, "Setting new LED color %d", _ledColor);
         for(int i = 0; i<_count; i++){
-            _ledstring.channel[0].leds[i] = _ledColor.wrgb;
+            _ledstring.channel[0].leds[i] = _ledColor;
         }
         _render();
     }

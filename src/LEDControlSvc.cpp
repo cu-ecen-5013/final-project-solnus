@@ -19,19 +19,22 @@
 #include <signal.h>
 #include <assert.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "LEDControlSvc_RC.h"
 using std::cout;
 using std::endl;
-
+#define MAX_NUM_ARG 10
 // Options
-static bool _daemon = false;
+//static bool _daemon = false;
 static uint32_t _ledCount = 0;
 static const char* _exe = nullptr;
 static bool running = true;
 static IOTHUB_DEVICE_CLIENT_LL_HANDLE device_ll_handle;
 
 //can put this to the class
+uint32_t _ledColor_in = 0x00002000;
+float intensity;
 static bool _notdmode = true;
 enum stateOps 
 {
@@ -40,37 +43,42 @@ enum stateOps
     nIntensity   = 3,
     ncolor       = 4,
     pattern      = 5,
-    defulteffect = 6
+    defulteffect = 6,
+    cmdprocess   = 7
 };
 int  state = defulteffect;
-char foo[] = "hello world"; //make complaints revStr is not init.
-void *revStr = foo;
+void *revStr;
 void *preStr = revStr;
+char **argvStore;
+
+
+
 
 // Forward-declarations
 static void usage();
-static void parseOpts(int argc, char* const* argv);
+static void parseOpts(int argc, char** argv);
 static void signal_handler(void);
 static void kill_handler(int signum);
 static void LEDnumcheck();
 static void daemonize();
 static void* DeviceRC(void *arg);
+static int CountUsrInput(char **argvStore);
 
 
 // Service entry point
-int main(const int argc, char* const* argv)
+int main(const int argc, char** argv)
 {   
     _exe = argv[0];
     openlog(_exe, LOG_PID|LOG_NDELAY, LOG_USER);
     LOG(LOG_INFO, "Starting service");
     parseOpts(argc, argv);
     LEDControl ctrlObj(_ledCount);
-    LEDControl::led_t _ledColor_in;
-    _ledColor_in.wrgb = 0x00002000;
+    
     signal_handler();
     int cpidx = 0;
     LEDControl::led_color_e colorPattern [4] = { LEDControl::LED_R, LEDControl::LED_G,
                                   LEDControl::LED_B, LEDControl::LED_W};
+    int narg = 0;
     if(iothub_init(&device_ll_handle)){
         iothub_RC_handler(&device_ll_handle,revStr);
         pthread_t tid;
@@ -85,7 +93,7 @@ int main(const int argc, char* const* argv)
             case setdaemon:
                 daemonize();
                 preStr = revStr;
-                state = defulteffect;
+                state = cmdprocess;
                 break;
 
             // set number of LED
@@ -93,23 +101,24 @@ int main(const int argc, char* const* argv)
                 LEDnumcheck();
                 ctrlObj.setNumLED(_ledCount);
                 memcpy(preStr,revStr,strlen((char*)revStr));
-                state = defulteffect;
+                state = cmdprocess;
                 break;
                 
             // Set new intencity
             case nIntensity:
-                ctrlObj.setIntensity(0.75);
+                ctrlObj.setIntensity(intensity);
                 preStr = revStr;
                 memcpy(preStr,revStr,strlen((char*)revStr));
-                state = defulteffect;
+                state = cmdprocess;
                 break;
 
             //Set new color
             case ncolor:
                 ctrlObj.setNewColor(_ledColor_in);
+                printf("wont change color but reached set color\n");
                 preStr = revStr;
                 memcpy(preStr,revStr,strlen((char*)revStr));
-                state = defulteffect;
+                state = cmdprocess;
                 break;
             
             //default effect
@@ -117,19 +126,21 @@ int main(const int argc, char* const* argv)
                 ctrlObj.setAll(colorPattern[cpidx]);
                 sleep(1);
                 cpidx = cpidx < 3? cpidx+1:0;
-                state = 0; //to default
+                state = cmdprocess; //to default
                 break;
 
-            default:
+            case cmdprocess:
                 //no new data  
                 if(memcmp(revStr,preStr,strlen((char*)preStr))==0){
                     state = defulteffect;
-                    printf("no data received: %s\n", (char*)revStr);
+                    printf("no data received prev data: %s\n", (char*)preStr);
                 }else{
                     printf("new data received: %s\n", (char*)revStr);
-                    //to new state state = ?
-                    state = defulteffect;
+                    narg = CountUsrInput(argvStore);
+                    parseOpts(narg, argvStore);
                 }
+                break;
+            default:
                 break;
                 
         }
@@ -138,26 +149,43 @@ int main(const int argc, char* const* argv)
     return 0;
 }
 
-void parseOpts(int argc, char* const* argv)
+void parseOpts(int argc, char** argv)
 {
-    int opt;
-    while((opt = getopt(argc, argv, "n:dhvV")) != -1)
+    int opt,Intmp;
+    while((opt = getopt(argc, argv, "n:i:c:dhvV")) != -1)
     {
         switch(opt)
         {
             case 'n':
                 _ledCount = strtoul(optarg, nullptr, 10);
-                // No point starting with no LEDs in use
                 LEDnumcheck();
+                state = nLEDnum;
                 LOG(LOG_DEBUG, "Option: LED count %u", _ledCount);
                 break;
 
             case 'd':
-                _daemon = true;
+                //_daemon = true;
                 state = setdaemon;
                 LOG(LOG_DEBUG, "Option: daemon mode");
                 break;
-
+            
+            case 'c':
+                _ledColor_in = strtoul(optarg, nullptr, 10);
+                state = ncolor;
+                LOG(LOG_DEBUG, "Option: change color");
+                break;
+            
+            case 'i':
+                Intmp = strtoul(optarg, nullptr, 10);
+                if ((Intmp >=0) && (Intmp <=100)){
+                    intensity =((float)Intmp/(float)100);
+                    state = nIntensity;
+                    LOG(LOG_DEBUG, "Option: change intensity");
+                }else{
+                    state = defulteffect;
+                }
+                break;
+            //what is verbose mode
             case 'v':
                 _verbose = true;
                 LOG(LOG_DEBUG, "Option: verbose mode");
@@ -180,6 +208,8 @@ void usage()
     cout << _exe << " [options] -n#" << endl;
     cout << "\t-n#\tNumber of LEDs in the strand (required, >0)" << endl;
     cout << "\t-d\tDaemonize the service" << endl;
+    cout << "\t-c#\tChange color" << endl;
+    cout << "\t-i#\tChange intensity (required 0-100)" << endl;
     cout << "\t-v\tVerbose logging" << endl;
     cout << "\t-V\tVery verbose logging (stdout)" << endl;
     cout << "\t-h\tUsage" << endl;
@@ -197,7 +227,7 @@ static void signal_handler(){
 }
 
 static void daemonize(){
-    if(_daemon && _notdmode)
+    if(_notdmode)
     {
         int ret = daemon(0, _veryVerbose);
         if(ret != 0)
@@ -212,6 +242,7 @@ static void daemonize(){
 }
 
 static void LEDnumcheck(){
+    // No point starting with no LEDs in use
     if(_ledCount == 0)
     {
         usage();
@@ -230,3 +261,16 @@ static void* DeviceRC(void *arg){
 }
 
 
+static int CountUsrInput(char **argvStore){
+	char delim[] = " ";
+    int wc = 0;
+	char *token = strtok((char*)revStr, delim);
+	while (token != NULL)
+	{
+		printf("'%s'\n", token);
+        memcpy(argvStore[wc++],token,strlen(token));
+		token = strtok(NULL, delim);
+	}
+
+	return wc;
+}
