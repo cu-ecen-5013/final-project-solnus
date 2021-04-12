@@ -8,20 +8,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "iothub.h"
-#include "iothub_device_client_ll.h"
-#include "iothub_client_options.h"
-#include "iothub_message.h"
-#include "azure_c_shared_utility/threadapi.h"
-#include "azure_c_shared_utility/shared_util_options.h"
-#include "iothubtransportmqtt.h"
-
+#include "LEDControlSvc_RC.h"
 #define SAMPLE_MQTT
 
 
 /* Paste in the your iothub connection string  */
 static const char* connectionString = "HostName=ecen5713-iot-hub.azure-devices.net;DeviceId=ecen5713-iot-edge;SharedAccessKey=sVDMKlFJsDETVlACDeH4iav64ks+5ejIw/kTvSag354=";
-static IOTHUBMESSAGE_DISPOSITION_RESULT receive_msg_callback(IOTHUB_MESSAGE_HANDLE message, void* user_context)
+IOTHUBMESSAGE_DISPOSITION_RESULT receive_msg_callback(IOTHUB_MESSAGE_HANDLE message, void* user_context)
 {
 //    (void)user_context;
     IOTHUBMESSAGE_CONTENT_TYPE content_type = IoTHubMessage_GetContentType(message);
@@ -74,20 +67,18 @@ int iothub_init(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle)
     return 1;
 }
 
-void iothub_receive(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle){
+void iothub_RC_handler(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle, void  *revStr){
     bool urlDecodeOn = true;
-    void *revStr;
     (void)IoTHubDeviceClient_LL_SetOption(*device_ll_handle, OPTION_AUTO_URL_ENCODE_DECODE, &urlDecodeOn);
-    if (IoTHubDeviceClient_LL_SetMessageCallback(*device_ll_handle, receive_msg_callback, &revStr) != IOTHUB_CLIENT_OK)
+    if (IoTHubDeviceClient_LL_SetMessageCallback(*device_ll_handle, receive_msg_callback, revStr) != IOTHUB_CLIENT_OK)
     {
         (void)printf("ERROR: IoTHubClient_LL_SetMessageCallback..........FAILED!\r\n");
         return ;
     }
-    (void)printf("Waiting for message to be sent to device \r\n");
-    while(1){
-        IoTHubDeviceClient_LL_DoWork(*device_ll_handle);
-        ThreadAPI_Sleep(10);
-    }
+}
+void iothub_receive(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle){
+    IoTHubDeviceClient_LL_DoWork(*device_ll_handle);
+    ThreadAPI_Sleep(500);
 }
 
 void iothub_deinit(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle){
@@ -96,12 +87,16 @@ void iothub_deinit(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle){
     IoTHub_Deinit();
 }
 
-int main2(){
+void test(){
+    char foo[] = "hello world"; //make complaints revStr is not init.
+    void  *revStr = foo;
     IOTHUB_DEVICE_CLIENT_LL_HANDLE device_ll_handle;
-
     if(iothub_init(&device_ll_handle)){
-        iothub_receive(&device_ll_handle);
+        iothub_RC_handler(&device_ll_handle,revStr);
+        (void)printf("Waiting for message to be sent to device \r\n");
+        while(1){
+            iothub_receive(&device_ll_handle);
+        }
     }
     iothub_deinit(&device_ll_handle);
-    return 0;
 }
