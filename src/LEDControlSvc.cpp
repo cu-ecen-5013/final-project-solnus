@@ -24,7 +24,7 @@
 #include "LEDControlSvc_RC.h"
 using std::cout;
 using std::endl;
-#define MAX_NUM_ARG 10
+#define MAX_ARG_NUM 100
 // Options
 //static bool _daemon = false;
 static uint32_t _ledCount = 0;
@@ -47,9 +47,9 @@ enum stateOps
     cmdprocess   = 7
 };
 int  state = defulteffect;
-void *revStr;
-void *preStr = revStr;
-char **argvStore;
+char *revStr;
+char *preStr = revStr;
+char *argvStore[MAX_ARG_NUM];
 
 
 
@@ -62,7 +62,7 @@ static void kill_handler(int signum);
 static void LEDnumcheck();
 static void daemonize();
 static void* DeviceRC(void *arg);
-static int CountUsrInput(char **argvStore);
+static int CountUsrInput();
 
 
 // Service entry point
@@ -136,7 +136,7 @@ int main(const int argc, char** argv)
                     printf("no data received prev data: %s\n", (char*)preStr);
                 }else{
                     printf("new data received: %s\n", (char*)revStr);
-                    narg = CountUsrInput(argvStore);
+                    narg = CountUsrInput();
                     parseOpts(narg, argvStore);
                 }
                 break;
@@ -261,16 +261,14 @@ static void* DeviceRC(void *arg){
 }
 
 
-static int CountUsrInput(char **argvStore){
-	char delim[] = " ";
+static int CountUsrInput(){
+    char delim[] = " ";
     int wc = 0;
-	char *token = strtok((char*)revStr, delim);
+	char *token = strtok(revStr, delim);
 	while (token != NULL)
 	{
-		printf("'%s'\n", token);
-        memcpy(argvStore[wc++],token,strlen(token));
+        argvStore[wc++] = token;
 		token = strtok(NULL, delim);
 	}
-
 	return wc;
 }
