@@ -1,0 +1,16 @@
+#! /bin/sh
+case "$1" in
+     start)
+	echo "Starting LED Control service code"
+	start-stop-daemon -S -n LEDControlSvc -a /usr/bin/LEDControlSvc -- -d
+	;;
+     stop)
+	echo "Stopping LED Control service code"
+	start-stop-daemon -K -n LEDControlSvc
+	;;
+     *)
+	echo "Usage: $0 {start|stop}"
+     exit 1
+esac
+
+exit 0
