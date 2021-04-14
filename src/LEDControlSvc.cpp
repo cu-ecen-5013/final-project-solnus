@@ -97,14 +97,14 @@ int main(const int argc, char** argv)
             // daemon the program, allow set once
             case setdaemon:
                 daemonize();
-                LOG("daemon state\n");
+                LOG(LOG_DEBUG,"daemon state\n");
                 state = cmdprocess;
                 break;
             // set number of LED
             case nLEDnum:
                 LEDnumcheck();
                 ctrlObj.setNumLED(_ledCount);
-                LOG("nLEDnum state\n");
+                LOG(LOG_DEBUG,"nLEDnum state\n");
                 state = cmdprocess;
                 break;
                 
@@ -112,14 +112,14 @@ int main(const int argc, char** argv)
             case nIntensity:
                 ctrlObj.setIntensity(intensity);
                 state = cmdprocess;
-                LOG("nIntensity state\n");
+                LOG(LOG_DEBUG,"nIntensity state\n");
                 break;
 
             //Set new color
             case ncolor:
                 ctrlObj.setNewColor(_ledColor_in);
                 state = cmdprocess;
-                LOG("ncolor state\n");
+                LOG(LOG_DEBUG,"ncolor state\n");
                 break;
             
             //default effect
@@ -127,7 +127,7 @@ int main(const int argc, char** argv)
                 ctrlObj.setAll(colorPattern[cpidx]);
                 sleep(1);
                 cpidx = cpidx < 3? cpidx+1:0;
-                LOG("default \n");
+                LOG(LOG_DEBUG,"default \n");
                 state = cmdprocess; 
                 break;
 
@@ -262,12 +262,13 @@ static void* DeviceRC(void *arg){
     IOTHUB_DEVICE_CLIENT_LL_HANDLE device_ll_handle;
     if(iothub_init(&device_ll_handle)){
         iothub_RC_handler(&device_ll_handle,revstr);
-        (void)LOG("Waiting for message to be sent to device \r\n");
+        LOG(LOG_ERR,"Waiting for message to be sent to device \r\n");
         while(1){
             iothub_receive(&device_ll_handle);
         }
     }
     iothub_deinit(&device_ll_handle);
+    pthread_exit(NULL);
 }
 
 static void freeStr(int narg){
@@ -287,9 +288,8 @@ static void resetStr(int &narg, bool isinit){
     if(!isinit){
         freeStr(narg);
     }
-    narg = 0;
     revstr = strdup(SPACE_STRING);   
-    for(narg;narg<INPUT_OFFSET;narg++ ){
+    for(narg=0;narg<INPUT_OFFSET;narg++ ){
         argvStore[narg] = strdup(DUMMPY_ARG);
         assert(argvStore[narg]!=nullptr);
     }
@@ -310,8 +310,8 @@ static void CountUsrInput(int &wc){
 }
 
 static void printargvS(int narg){
-    LOG("wc is %d, argget is ",narg );
+    LOG(LOG_INFO, "wc is %d, argget is ",narg );
     for (int i = 0; i< narg; i++){
-        LOG("%s ",argvStore[i]);
+        LOG(LOG_INFO,"%s ",argvStore[i]);
     }
 }
