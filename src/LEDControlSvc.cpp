@@ -9,6 +9,8 @@
  * 
  *****************************************************************************/
 
+
+
 #include "logging.h"
 #include "LEDControl.h"
 
@@ -22,15 +24,16 @@
 #include <string.h>
 
 #include "LEDControlSvc_RC.h"
+
 using std::cout;
 using std::endl;
 #define MAX_ARG_NUM 100
+#define MAX_ARG_LEN 100
 // Options
 //static bool _daemon = false;
 static uint32_t _ledCount = 0;
 static const char* _exe = nullptr;
 static bool running = true;
-static IOTHUB_DEVICE_CLIENT_LL_HANDLE device_ll_handle;
 
 //can put this to the class
 uint32_t _ledColor_in = 0x00002000;
@@ -47,9 +50,8 @@ enum stateOps
     cmdprocess   = 7
 };
 int  state = defulteffect;
-char *revStr;
-char *preStr = revStr;
-char *argvStore[MAX_ARG_NUM];
+char *revstr;
+char *argvStore[MAX_ARG_LEN];
 
 
 
@@ -62,12 +64,14 @@ static void kill_handler(int signum);
 static void LEDnumcheck();
 static void daemonize();
 static void* DeviceRC(void *arg);
-static int CountUsrInput();
-
-
+static void CountUsrInput(int &wc);
+static void freeStr(int narg);
+static void resetStr(int &narg,bool isinit);
+static void printargvS(int narg);
 // Service entry point
 int main(const int argc, char** argv)
 {   
+    
     _exe = argv[0];
     openlog(_exe, LOG_PID|LOG_NDELAY, LOG_USER);
     LOG(LOG_INFO, "Starting service");
@@ -78,47 +82,44 @@ int main(const int argc, char** argv)
     int cpidx = 0;
     LEDControl::led_color_e colorPattern [4] = { LEDControl::LED_R, LEDControl::LED_G,
                                   LEDControl::LED_B, LEDControl::LED_W};
+    
     int narg = 0;
-    if(iothub_init(&device_ll_handle)){
-        iothub_RC_handler(&device_ll_handle,revStr);
-        pthread_t tid;
-        assert(pthread_create(&tid,		    //Store ID of the new thread
-                            NULL,		    //Default attribute
-                            DeviceRC,	    //Start routine
-                            (void *)0)==0); //Arg pass to the start routine
-    }
+    pthread_t tid;
+    resetStr(narg, true);
+    
+    assert(pthread_create(&tid,		    //Store ID of the new thread
+                        NULL,		    //Default attribute
+                        DeviceRC,	    //Start routine
+                        (void *)0)==0); //Arg pass to the start routine 
+    
     while(running){
         switch (state){
             // daemon the program, allow set once
             case setdaemon:
                 daemonize();
-                preStr = revStr;
+                LOG("daemon state\n");
                 state = cmdprocess;
                 break;
-
             // set number of LED
             case nLEDnum:
                 LEDnumcheck();
                 ctrlObj.setNumLED(_ledCount);
-                memcpy(preStr,revStr,strlen((char*)revStr));
+                LOG("nLEDnum state\n");
                 state = cmdprocess;
                 break;
                 
             // Set new intencity
             case nIntensity:
                 ctrlObj.setIntensity(intensity);
-                preStr = revStr;
-                memcpy(preStr,revStr,strlen((char*)revStr));
                 state = cmdprocess;
+                LOG("nIntensity state\n");
                 break;
 
             //Set new color
             case ncolor:
                 ctrlObj.setNewColor(_ledColor_in);
-                printf("wont change color but reached set color\n");
-                preStr = revStr;
-                memcpy(preStr,revStr,strlen((char*)revStr));
                 state = cmdprocess;
+                LOG("ncolor state\n");
                 break;
             
             //default effect
@@ -126,32 +127,37 @@ int main(const int argc, char** argv)
                 ctrlObj.setAll(colorPattern[cpidx]);
                 sleep(1);
                 cpidx = cpidx < 3? cpidx+1:0;
-                state = cmdprocess; //to default
+                LOG("default \n");
+                state = cmdprocess; 
                 break;
 
             case cmdprocess:
-                //no new data  
-                if(memcmp(revStr,preStr,strlen((char*)preStr))==0){
+                if(strcmp(revstr,SPACE_STRING)==0){
                     state = defulteffect;
-                    printf("no data received prev data: %s\n", (char*)preStr);
                 }else{
-                    printf("new data received: %s\n", (char*)revStr);
-                    narg = CountUsrInput();
+                    CountUsrInput(narg);
+                    printargvS(narg);
                     parseOpts(narg, argvStore);
+                    resetStr(narg, false);
                 }
                 break;
+            
             default:
                 break;
                 
         }
     }
+    freeStr(narg);
     LOG(LOG_INFO, "Stopping service"); 
     return 0;
+
 }
+
 
 void parseOpts(int argc, char** argv)
 {
     int opt,Intmp;
+    optind = 0;
     while((opt = getopt(argc, argv, "n:i:c:dhvV")) != -1)
     {
         switch(opt)
@@ -253,22 +259,59 @@ static void LEDnumcheck(){
 }
 
 static void* DeviceRC(void *arg){
-    while(1){
-        iothub_receive(&device_ll_handle);
+    IOTHUB_DEVICE_CLIENT_LL_HANDLE device_ll_handle;
+    if(iothub_init(&device_ll_handle)){
+        iothub_RC_handler(&device_ll_handle,revstr);
+        (void)LOG("Waiting for message to be sent to device \r\n");
+        while(1){
+            iothub_receive(&device_ll_handle);
+        }
     }
     iothub_deinit(&device_ll_handle);
-    pthread_exit(NULL);
+}
+
+static void freeStr(int narg){
+    if(revstr!=NULL){
+        free(revstr);
+        revstr = NULL;
+    }
+    
+    for(int i=0; i<narg;i++){
+        if(argvStore[narg]!=NULL){
+            free(argvStore[narg]);  
+            argvStore[narg]=NULL;
+        }
+    }
+}
+static void resetStr(int &narg, bool isinit){
+    if(!isinit){
+        freeStr(narg);
+    }
+    narg = 0;
+    revstr = strdup(SPACE_STRING);   
+    for(narg;narg<INPUT_OFFSET;narg++ ){
+        argvStore[narg] = strdup(DUMMPY_ARG);
+        assert(argvStore[narg]!=nullptr);
+    }
+    
+    assert(revstr!=nullptr);
 }
 
 
-static int CountUsrInput(){
-    char delim[] = " ";
-    int wc = 0;
-	char *token = strtok(revStr, delim);
-	while (token != NULL)
+static void CountUsrInput(int &wc){
+    char delim[] = SPACE_STRING;
+	char *token = strtok(revstr, delim);
+	while (token != NULL && (wc < MAX_ARG_LEN))
 	{
-        argvStore[wc++] = token;
+        argvStore[wc] = strdup(token);
 		token = strtok(NULL, delim);
+        wc++;
 	}
-	return wc;
+}
+
+static void printargvS(int narg){
+    LOG("wc is %d, argget is ",narg );
+    for (int i = 0; i< narg; i++){
+        LOG("%s ",argvStore[i]);
+    }
 }

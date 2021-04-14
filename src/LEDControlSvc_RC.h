@@ -5,6 +5,10 @@
 #include "azure_c_shared_utility/threadapi.h"
 #include "azure_c_shared_utility/shared_util_options.h"
 #include "iothubtransportmqtt.h"
+#define EMPTY_STRING ""
+#define SPACE_STRING " "
+#define DUMMPY_ARG   "dummpy"
+#define INPUT_OFFSET 1
 IOTHUBMESSAGE_DISPOSITION_RESULT receive_msg_callback(IOTHUB_MESSAGE_HANDLE message, void* user_context);
 int iothub_init(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle);
 void iothub_deinit(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle);
@@ -12,3 +16,5 @@ void iothub_RC_handler(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle, void  *
 void iothub_receive(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle);
 void iothub_deinit(IOTHUB_DEVICE_CLIENT_LL_HANDLE *device_ll_handle);
 void test();
+
+
