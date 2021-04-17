@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-// CAVEAT: This sample is to demonstrate azure IoT client concepts only and is not a guide design principles or style
-// Checking of return codes and error values shall be omitted for brevity.  Please practice sound engineering practices
-// when writing production code.
 
 #include <stdio.h>
 #include <stdlib.h>

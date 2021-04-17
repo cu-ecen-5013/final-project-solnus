@@ -27,29 +27,44 @@
 
 using std::cout;
 using std::endl;
-#define MAX_ARG_NUM 100
-#define MAX_ARG_LEN 100
+#define MAX_ARG_NUM     100
+#define MAX_ARG_LEN     100
+#define COLOR_PAT_NUM   4
+#define MAX_INTEN_RATE  1.0
+#define US_TO_MS        1000
+#define NS_TO_MS        1000000
+#define DEFAULT_SLEEP   1000
+#define PERCENTAGE      100
+#define FADE_STEP       0.01//1/(float)FADE_RES
+#define SLEEP_RES       10
+#define FADE_RES        100 
+
 // Options
-//static bool _daemon = false;
 static uint32_t _ledCount = 0;
 static const char* _exe = nullptr;
 static bool running = true;
+bool fade = false;
+bool off = false;
 
-//can put this to the class
 uint32_t _ledColor_in = 0x00002000;
-float intensity;
+float intensity = MAX_INTEN_RATE;
+
+int slptime = 1000;
 static bool _notdmode = true;
 enum stateOps 
 {
-    nLEDnum      = 1,
-    setdaemon    = 2,
-    nIntensity   = 3,
-    ncolor       = 4,
-    pattern      = 5,
-    defulteffect = 6,
-    cmdprocess   = 7
+    setLEDnum = 1,
+    setDaemon,  
+    setInten,      
+    setColor,    
+    setPttrn,    
+    setFade,
+    setNorm,
+    LEDoff,
+    shutdown,
+    setCmdPs  
 };
-int  state = defulteffect;
+int  state = setNorm;
 char *revstr;
 char *argvStore[MAX_ARG_LEN];
 
@@ -68,6 +83,12 @@ static void CountUsrInput(int &wc);
 static void freeStr(int narg);
 static void resetStr(int &narg,bool isinit);
 static void printargvS(int narg);
+static void LEDColorOn(LEDControl::led_t *dPattern, int &dpidx, LEDControl &ctrlObj);
+static void ParamReset( LEDControl &ctrlObj);
+static void FadeEffect(float &frate, LEDControl &ctrlObj,LEDControl::led_t *dPattern, int &dpidx);
+static void selstate();
+
+
 // Service entry point
 int main(const int argc, char** argv)
 {   
@@ -79,14 +100,15 @@ int main(const int argc, char** argv)
     LEDControl ctrlObj(_ledCount);
     
     signal_handler();
-    int cpidx = 0;
-    LEDControl::led_color_e colorPattern [4] = { LEDControl::LED_R, LEDControl::LED_G,
-                                  LEDControl::LED_B, LEDControl::LED_W};
-    
+    int dpidx = 0;                      //display color index
+    int scidx = 0;                      //Set color index
+    float frate = MAX_INTEN_RATE;        //fade rate
+    LEDControl::led_t dPattern [COLOR_PAT_NUM] 
+    = { LEDControl::LED_R, LEDControl::LED_G,
+        LEDControl::LED_B, LEDControl::LED_W};
     int narg = 0;
     pthread_t tid;
     resetStr(narg, true);
-    
     assert(pthread_create(&tid,		    //Store ID of the new thread
                         NULL,		    //Default attribute
                         DeviceRC,	    //Start routine
@@ -95,46 +117,64 @@ int main(const int argc, char** argv)
     while(running){
         switch (state){
             // daemon the program, allow set once
-            case setdaemon:
+            case setDaemon:
                 daemonize();
                 LOG(LOG_DEBUG,"daemon state\n");
-                state = cmdprocess;
-                break;
-            // set number of LED
-            case nLEDnum:
-                LEDnumcheck();
-                ctrlObj.setNumLED(_ledCount);
-                LOG(LOG_DEBUG,"nLEDnum state\n");
-                state = cmdprocess;
-                break;
-                
-            // Set new intencity
-            case nIntensity:
-                ctrlObj.setIntensity(intensity);
-                state = cmdprocess;
-                LOG(LOG_DEBUG,"nIntensity state\n");
-                break;
-
-            //Set new color
-            case ncolor:
-                ctrlObj.setNewColor(_ledColor_in);
-                state = cmdprocess;
-                LOG(LOG_DEBUG,"ncolor state\n");
+                state = setCmdPs;
                 break;
             
-            //default effect
-            case defulteffect:
-                ctrlObj.setAll(colorPattern[cpidx]);
-                sleep(1);
-                cpidx = cpidx < 3? cpidx+1:0;
-                LOG(LOG_DEBUG,"default \n");
-                state = cmdprocess; 
+            // set number of LED
+            case setLEDnum:
+                LEDnumcheck();
+                ctrlObj.setAllOff();
+                ctrlObj.setNumLED(_ledCount);
+                ctrlObj.setIntensity(intensity);
+                state = setCmdPs;
+                LOG(LOG_DEBUG,"setLEDnum state\n");
                 break;
 
-            case cmdprocess:
+            // Set new intensity
+            case setInten:
+                ctrlObj.setIntensity(intensity);
+                state = setCmdPs;
+                LOG(LOG_DEBUG,"setInten state\n");
+                break;
+
+            //Set new color to array
+            //recomand convert from hex to decimal and sent decimal string from UI
+            case setColor:
+                dPattern[scidx].wrgb = _ledColor_in;
+                scidx = scidx < (COLOR_PAT_NUM -1) ? scidx+1:0;
+                state = setCmdPs;
+                LOG(LOG_DEBUG,"setColor state\n");
+                break;
+            
+            // Set all LED off
+            case LEDoff:
+                ctrlObj.setAllOff();
+                state = setCmdPs;
+                LOG(LOG_DEBUG,"LEDoff state\n");
+                break;
+            
+            //set fade paramters
+            case setFade:
+                FadeEffect(frate, ctrlObj,dPattern,dpidx);
+                state = setCmdPs;
+                LOG(LOG_DEBUG,"LED fade effect\n");
+                break; 
+
+            //set default LED 
+            case setNorm:
+                LEDColorOn(dPattern, dpidx, ctrlObj);
+                state = setCmdPs; 
+                LOG(LOG_DEBUG,"setNorm \n");
+                break;
+            // Command process
+            case setCmdPs:
                 if(strcmp(revstr,SPACE_STRING)==0){
-                    state = defulteffect;
+                   selstate();
                 }else{
+                    ParamReset(ctrlObj);
                     CountUsrInput(narg);
                     printargvS(narg);
                     parseOpts(narg, argvStore);
@@ -144,54 +184,82 @@ int main(const int argc, char** argv)
             
             default:
                 break;
-                
         }
     }
+    ctrlObj.setAllOff();
     freeStr(narg);
     LOG(LOG_INFO, "Stopping service"); 
     return 0;
-
 }
 
 
 void parseOpts(int argc, char** argv)
 {
+    static bool FirstIn = true; 
     int opt,Intmp;
     optind = 0;
-    while((opt = getopt(argc, argv, "n:i:c:dhvV")) != -1)
+    while((opt = getopt(argc, argv, "n:i:c:s:ofdhvVrx")) != -1)
     {
         switch(opt)
         {
             case 'n':
                 _ledCount = strtoul(optarg, nullptr, 10);
                 LEDnumcheck();
-                state = nLEDnum;
+                state = setLEDnum;
                 LOG(LOG_DEBUG, "Option: LED count %u", _ledCount);
                 break;
 
             case 'd':
-                //_daemon = true;
-                state = setdaemon;
+                state = setDaemon;
                 LOG(LOG_DEBUG, "Option: daemon mode");
                 break;
             
+            case 'r':
+                fade = false;    
+                off = false;
+                state = setNorm;
+                LOG(LOG_DEBUG, "Option: set to regular flash effect");
+                break;
+
             case 'c':
                 _ledColor_in = strtoul(optarg, nullptr, 10);
-                state = ncolor;
-                LOG(LOG_DEBUG, "Option: change color");
+                state = setColor;
+                LOG(LOG_DEBUG, "Option: change LED color");
                 break;
             
             case 'i':
                 Intmp = strtoul(optarg, nullptr, 10);
                 if ((Intmp >=0) && (Intmp <=100)){
-                    intensity =((float)Intmp/(float)100);
-                    state = nIntensity;
+                    intensity =((float)Intmp/(float)PERCENTAGE);
+                    state = setInten;
                     LOG(LOG_DEBUG, "Option: change intensity");
-                }else{
-                    state = defulteffect;
                 }
                 break;
-            //what is verbose mode
+            case 's':
+                slptime = strtoul(optarg, nullptr, 10);
+                state = setNorm;
+                LOG(LOG_DEBUG, "Option: change LED flash frequency");
+                break;
+
+            case 'f':
+                off = false;
+                fade = true;
+                state = setFade;
+                LOG(LOG_DEBUG, "Option: set to fade effect"); 
+                break;
+
+            case 'o':
+                fade = false;    
+                off = true;
+                state = LEDoff;
+                LOG(LOG_DEBUG, "Option: turn off all LEDs"); 
+                break;
+
+            case 'x':
+                running = false;
+                LOG(LOG_DEBUG, "Option: shunt down the process"); 
+                break;
+
             case 'v':
                 _verbose = true;
                 LOG(LOG_DEBUG, "Option: verbose mode");
@@ -203,19 +271,28 @@ void parseOpts(int argc, char** argv)
                 break;
             default:
                 usage();
-                closelog();
-                exit(1);
+                //False UI input will be ignore
+                if (FirstIn){
+                    closelog();
+                    exit(1);
+                }
         }
     }
+    FirstIn = false;
 }
 
 void usage()
 {
     cout << _exe << " [options] -n#" << endl;
-    cout << "\t-n#\tNumber of LEDs in the strand (required, >0)" << endl;
-    cout << "\t-d\tDaemonize the service" << endl;
-    cout << "\t-c#\tChange color" << endl;
+    cout << "\t-n#\tNumber of LEDs to turn on in the strand (required, >0)" << endl;
     cout << "\t-i#\tChange intensity (required 0-100)" << endl;
+    cout << "\t-c#\tChange color" << endl;
+    cout << "\t-s#\tChange sleep time" << endl;
+    cout << "\t-f\tFade effect" << endl;
+    cout << "\t-r\tRegular effect" << endl;
+    cout << "\t-o\tTurn off LED" << endl;
+    cout << "\t-x\tshut down the entire process" << endl;
+    cout << "\t-d\tDaemonize the service" << endl;
     cout << "\t-v\tVerbose logging" << endl;
     cout << "\t-V\tVery verbose logging (stdout)" << endl;
     cout << "\t-h\tUsage" << endl;
@@ -257,7 +334,7 @@ static void LEDnumcheck(){
         exit(1);
     }
 }
-
+//Thread function for receiving UI input 
 static void* DeviceRC(void *arg){
     IOTHUB_DEVICE_CLIENT_LL_HANDLE device_ll_handle;
     if(iothub_init(&device_ll_handle)){
@@ -314,4 +391,49 @@ static void printargvS(int narg){
     for (int i = 0; i< narg; i++){
         LOG(LOG_INFO,"%s ",argvStore[i]);
     }
+}
+
+static void LEDColorOn(LEDControl::led_t *dPattern, int &dpidx, LEDControl &ctrlObj){
+    ctrlObj.setNewColor(dPattern[dpidx]);
+    usleep(slptime*US_TO_MS);
+    dpidx = dpidx < COLOR_PAT_NUM-1? dpidx+1:0;
+}
+
+static void ParamReset( LEDControl &ctrlObj){
+    intensity = (int)MAX_INTEN_RATE;
+    slptime = DEFAULT_SLEEP;
+    ctrlObj.setIntensity(intensity);
+}
+
+static void FadeEffect(float &frate, LEDControl &ctrlObj,LEDControl::led_t *dPattern, int &dpidx){
+    bool up = false;
+    struct timespec ts;
+    for(int i =0; i<FADE_RES; i++){
+        assert(clock_gettime(CLOCK_MONOTONIC, &ts)==0);
+        //intented to use slptime to SLEEP_RES, but flash frequency is not changin?
+        ts.tv_nsec=NS_TO_MS*SLEEP_RES; 
+        if(up){
+            frate+=FADE_STEP;
+            if(frate>=MAX_INTEN_RATE)
+                up = !up;
+        } else{
+            frate-=FADE_STEP;
+            if(frate<=0)
+                up = !up;
+        }
+        ctrlObj.setIntensity(frate);
+        ctrlObj.setNewColor(dPattern[dpidx]);
+        assert(clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL)==0);
+    }
+    ParamReset(ctrlObj);
+    dpidx = dpidx < COLOR_PAT_NUM-1? dpidx+1:0; 
+}
+
+static void selstate(){
+    if(fade)
+        state = setFade;
+    else if(off)
+        state = LEDoff;
+    else
+        state = setNorm;
 }

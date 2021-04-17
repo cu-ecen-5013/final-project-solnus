@@ -14,7 +14,7 @@
 
 #include "logging.h"
 #include "rpi_ws281x/ws2811.h"
-#include <stdint.h>
+#include <stdint.h> 
 #include <stdlib.h>
 #include <string.h>
 
@@ -80,21 +80,14 @@ public:
         _render();
     }
 
-    void setNewColor (uint32_t _ledColor)
-    {
-        LOG(LOG_INFO, "Setting new LED color %d", _ledColor);
-        for(int i = 0; i<_count; i++){
-            _ledstring.channel[0].leds[i] = _ledColor;
-        }
-        _render();
-    }
-
     void setIntensity(float intensity)
     {
-        LOG(LOG_INFO, "Setting intensity to %f", intensity);
-        _intensity = (uint8_t)(intensity * 255);
-        _ledstring.channel[0].brightness = _intensity;
-        _render();
+        if((intensity>=0)&&(intensity<=1)){
+            LOG(LOG_INFO, "Setting intensity to %f", intensity);    
+            _intensity = (uint8_t)(intensity * 255);
+            _ledstring.channel[0].brightness = _intensity;
+            _render();
+        }
     }
 
     void setPattern(led_t* leds)
@@ -106,13 +99,23 @@ public:
         _render();
     }
 
-    void setAll(led_color_e color)
+    void setNewColor(led_t color)
     {
-        LOG(LOG_DEBUG, "Setting all to color");
-        // TODO update output
+        LOG(LOG_INFO, "Setting all to color");
         for (int i = 0; i<_count; i++){
-            _ledstring.channel[0].leds[i] = color;
+            _ledstring.channel[0].leds[i] = color.wrgb;
         }
+        _render();
+    }
+
+    void setAllOff()
+    {
+        LOG(LOG_INFO, "Setting all LED off");
+        for(int i =0; i<_count; i++){
+            _ledstring.channel[0].brightness = 0;
+        }
+        //_count =  0;
+        //_ledstring.channel[0].count = _count;
         _render();
     }
 
