@@ -12,7 +12,7 @@
 
 
 /* Paste in the your iothub connection string  */
-static const char* connectionString = "HostName=ecen5713-iot-hub.azure-devices.net;DeviceId=ecen5713-iot-edge;SharedAccessKey=sVDMKlFJsDETVlACDeH4iav64ks+5ejIw/kTvSag354=";
+static const char* connectionString = "HostName=ecen5713-iot-hub.azure-devices.net;DeviceId=ecen5713-iot-edge;SharedAccessKey=" AZURE_DEVICE_KEY;
 IOTHUBMESSAGE_DISPOSITION_RESULT receive_msg_callback(IOTHUB_MESSAGE_HANDLE message, void* user_context)
 {
     //user_context = (char*) user_context;

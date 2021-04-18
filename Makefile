@@ -13,9 +13,14 @@ ifeq ($(SCONS),)
 	SCONS = scons
 endif
 
-ifeq ($(EXTRA_CXXFLAGS),)
-	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17 -I. -I$(STAGING_DIR)/usr/include/azureiot
+ifeq ($(AZURE_DEVICE_KEY),)
+	AZURE_DEVICE_KEY = "Gply81vOUaYpgBujYD0xhIk13xzExrKSf0EDvTW0LDA="
 endif
+
+ifeq ($(EXTRA_CXXFLAGS),)
+	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17 -I. -I$(STAGING_DIR)/usr/include/azureiot -DAZURE_DEVICE_KEY=\"$(AZURE_DEVICE_KEY)\"
+endif
+
 
 # If building from buildroot, linking happens differently
 ifeq ($(BR2_CONFIG),)

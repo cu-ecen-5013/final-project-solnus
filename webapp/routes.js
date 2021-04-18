@@ -5,10 +5,12 @@ var router = express.Router();
 
 var Client = require('azure-iothub').Client;
 var Message = require('azure-iot-common').Message;
-var connectionString = 'HostName=ecen5713-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=Gply81vOUaYpgBujYD0xhIk13xzExrKSf0EDvTW0LDA=';
+
+var deviceStrings = ['HostName=ecen5713-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=Gply81vOUaYpgBujYD0xhIk13xzExrKSf0EDvTW0LDA=',
+                     'HostName=ecen5713-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=+CzApInvSW39SBSX+GOvZZMk4xhjdBRSBo4JQ+pkDUw='];
+
 var targetDevice = 'ecen5713-iot-edge';
 
-var serviceClient = Client.fromConnectionString(connectionString);
 function printResultFor(op) {
     return function printResult(err, res) {
       if (err) console.log(op + ' error: ' + err.toString());
@@ -24,40 +26,59 @@ function receiveFeedback(err, receiver){
 }
 
 router.get("/",function(req,res){
-    console.log("Hello World");
     res.render("index");
 });
 
-router.post('/status',function(req, res) {
-    var cmd = (req.body.cmd) + "";
-    console.log("receive " + cmd);
+router.post('/command',function(req, res) {
+    console.log("Device: " + req.body.device)  
+    console.log("Command: " + req.body.cmd)
+    console.log("Color: " + req.body.color);
+    console.log("Preset: " + req.body.preset);
+  
+    var connectionString;
+    switch(req.body.device)
+    {
+      case 'device0':
+        connectionString = deviceStrings[0];
+        break;
+
+      case 'device1':
+        connectionString = deviceStrings[1];
+        break;
+
+      default:
+        return;
+    }
+
+    var message;
+    switch(req.body.cmd)
+    {
+      case 'color':
+        message = "color " + req.body.color;
+        break;
+      case 'preset':
+        message = "preset " + req.body.preset;
+        break;
+      case 'command':
+        message = req.body.commandstr;
+        break;
+      default:
+        console.error("Unhandled value: + req.body.cmd")
+        return;
+    }
+
+    var serviceClient = Client.fromConnectionString(connectionString);
     serviceClient.open(
         function (err) {
         if (err) {
           console.error('Could not connect: ' + err.message);
         } else {
-          var message = new Message(cmd);
-          console.log('Sending message: ' + message.getData());
-          serviceClient.send(targetDevice, message, printResultFor('send'));
+          var msg = new Message(message);
+          console.log('Sending message: ' + msg.getData());
+          serviceClient.send(targetDevice, msg, printResultFor('send'));
         }
       });
-    res.render("index");
-});
-
-router.post('/colorPick',function(req, res) {
-    var clr = (req.body.clr) + "";
-    console.log("receive color" + clr);
-    serviceClient.open(
-        function (err) {
-        if (err) {
-          console.error('Could not connect: ' + err.message);
-        } else {
-          var message = new Message(clr);
-          console.log('Sending message: ' + message.getData());
-          serviceClient.send(targetDevice, message, printResultFor('send'));
-        }
-      });
-    res.render("index");
+    res.render("index", {req:req});
 });
 
 

@@ -52,23 +52,61 @@
 <title>LED Control</title>
 <h1> LED Controller</h1>
 <body>
-    <form action="/status" method="post">
+    <script src = "//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script>  
+        $(document).ready(function(){
+            $("#clrpik").show();
+            $("#preset").hide();
+            $("#commandstr").hide();
+
+            $('#command').on('change', function() {
+              if ( this.value == 'color')
+              {
+                $("#clrpik").show();
+                $("#preset").hide();
+                $("#commandstr").hide();
+              }
+              else if( this.value == 'preset')
+              {
+                $("#clrpik").hide();
+                $("#preset").show();
+                $("#commandstr").hide();
+              }
+              else
+              {
+                $("#clrpik").hide();
+                $("#preset").hide();
+                $("#commandstr").show();
+              }
+            });
+        });
+    </script>
+
+    <form action="/command" method="post">
         <div class="group">
-            <label for="_cmd">Command</label>
-            <input style="font-size:20px;" type="text" name="cmd" id = "_cmd" size = 15>
+            <select name="device" id="device">
+                <option value="device0">Device 0</option>
+                <option value="device1">Device 1</option>
+            </select>
+            <select name="cmd" id="command">
+                <option value="color">Color</option>
+                <option value="preset">Preset</option>
+                <option value="command">Custom Command</option>
+            </select>
+            <div style="width:150px; display:inline-block">
+                <select style="width:140px;" name="preset" id="preset">
+                    <option value="preset0">Preset 0</option>
+                    <option value="preset1">Preset 1</option>
+                    <option value="preset2">Preset 2</option>
+                    <option value="preset3">Preset 3</option>
+                </select>
+                <input style="width:140px;" type="color" name="color" id="clrpik" value="<% if(locals.req){ __append(req.body.color); } else { __append("#ff0000"); } %>">
+                <input style="font-size:20px; width:150px;" type="text" name="commandstr" id = "commandstr">
+            </div>
             <button type="submit" class="button">Send</button>
         </div>
-
     </form>
     
-    <form action="/colorPick" method="post">
-        <div class="group">
-            <label for="clrpik">Pick color</label>
-            <input type="color" class="withborder" name="clr" id="clrpik" value="#ff0000">
-            <button type="submit" class="button">Send</button>
-        </div>
-    </form>
-
 </html>
 </body>
 
