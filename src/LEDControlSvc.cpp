@@ -50,7 +50,6 @@ uint32_t _ledColor_in = 0x00002000;
 float intensity = MAX_INTEN_RATE;
 
 int slptime = 1000;
-static bool _notdmode = true;
 enum stateOps 
 {
     setLEDnum = 1,
@@ -116,13 +115,6 @@ int main(const int argc, char** argv)
     
     while(running){
         switch (state){
-            // daemon the program, allow set once
-            case setDaemon:
-                daemonize();
-                LOG(LOG_DEBUG,"daemon state\n");
-                state = setCmdPs;
-                break;
-            
             // set number of LED
             case setLEDnum:
                 LEDnumcheck();
@@ -195,7 +187,7 @@ int main(const int argc, char** argv)
 
 void parseOpts(int argc, char** argv)
 {
-    static bool FirstIn = true; 
+    static bool FirstIn = true;         //First input
     int opt,Intmp;
     optind = 0;
     while((opt = getopt(argc, argv, "n:i:c:s:ofdhvVrx")) != -1)
@@ -210,8 +202,10 @@ void parseOpts(int argc, char** argv)
                 break;
 
             case 'd':
-                state = setDaemon;
-                LOG(LOG_DEBUG, "Option: daemon mode");
+                if (FirstIn){
+                    daemonize(); //set daemon before the thread
+                    LOG(LOG_DEBUG, "Option: daemon mode");
+                }
                 break;
             
             case 'r':
@@ -310,18 +304,14 @@ static void signal_handler(){
 }
 
 static void daemonize(){
-    if(_notdmode)
+    int ret = daemon(0, _veryVerbose);
+    if(ret != 0)
     {
-        int ret = daemon(0, _veryVerbose);
-        if(ret != 0)
-        {
-            LOG(LOG_ERR, "Failed to daemonize");
-            closelog();
-            exit(1);
-        }
-        _notdmode = false;
-        LOG(LOG_DEBUG, "Daemonized");
+        LOG(LOG_ERR, "Failed to daemonize");
+        closelog();
+        exit(1);
     }
+    LOG(LOG_DEBUG, "Daemonized");
 }
 
 static void LEDnumcheck(){

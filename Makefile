@@ -14,7 +14,7 @@ ifeq ($(SCONS),)
 endif
 
 ifeq ($(EXTRA_CXXFLAGS),)
-	EXTRA_CXXFLAGS = -std=c++17 -I. -I$(STAGING_DIR)/usr/include/azureiot
+	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17 -I. -I$(STAGING_DIR)/usr/include/azureiot
 endif
 
 # If building from buildroot, linking happens differently
