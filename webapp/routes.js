@@ -6,10 +6,10 @@ var router = express.Router();
 var Client = require('azure-iothub').Client;
 var Message = require('azure-iot-common').Message;
 
-var deviceStrings = ['HostName=ecen5713-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=Gply81vOUaYpgBujYD0xhIk13xzExrKSf0EDvTW0LDA=',
-                     'HostName=ecen5713-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=+CzApInvSW39SBSX+GOvZZMk4xhjdBRSBo4JQ+pkDUw='];
+var deviceNames = ['ecen5713-iot-edge', 'LEDControlSvc2'];
 
-var targetDevice = 'ecen5713-iot-edge';
+var serviceConnStr = 'HostName=ecen5713-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=Gply81vOUaYpgBujYD0xhIk13xzExrKSf0EDvTW0LDA=';
+var serviceClient = Client.fromConnectionString(serviceConnStr);
 
 function printResultFor(op) {
     return function printResult(err, res) {
@@ -34,16 +34,16 @@ router.post('/command',function(req, res) {
     console.log("Command: " + req.body.cmd)
     console.log("Color: " + req.body.color);
     console.log("Preset: " + req.body.preset);
-  
-    var connectionString;
+
+    var targetDevice;
     switch(req.body.device)
     {
       case 'device0':
-        connectionString = deviceStrings[0];
+        targetDevice = deviceNames[0];
         break;
 
       case 'device1':
-        connectionString = deviceStrings[1];
+        targetDevice = deviceNames[1];
         break;
 
       default:
@@ -67,7 +67,6 @@ router.post('/command',function(req, res) {
         return;
     }
 
-    var serviceClient = Client.fromConnectionString(connectionString);
     serviceClient.open(
         function (err) {
         if (err) {
