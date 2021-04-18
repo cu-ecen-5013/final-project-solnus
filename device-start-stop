@@ -2,7 +2,7 @@
 case "$1" in
      start)
 	echo "Starting LED Control service code"
-	start-stop-daemon -S -n LEDControlSvc -a /usr/bin/LEDControlSvc -- -n64
+	start-stop-daemon -S -n LEDControlSvc -a /usr/bin/LEDControlSvc -- -V -v -d -n64
 	;;
      stop)
 	echo "Stopping LED Control service code"
