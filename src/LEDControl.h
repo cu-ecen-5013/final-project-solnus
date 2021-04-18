@@ -93,29 +93,22 @@ public:
     void setPattern(led_t* leds)
     {
         LOG(LOG_INFO, "Setting pattern");
-        // TODO update output 
-       
-
         _render();
     }
 
-    void setNewColor(led_t color)
+    void setColor(led_color_e c)
+    {
+        led_t color;
+        color.wrgb = c;
+        setColor(color);
+    }
+
+    void setColor(led_t color)
     {
         LOG(LOG_INFO, "Setting all to color");
         for (int i = 0; i<_count; i++){
             _ledstring.channel[0].leds[i] = color.wrgb;
         }
-        _render();
-    }
-
-    void setAllOff()
-    {
-        LOG(LOG_INFO, "Setting all LED off");
-        for(int i =0; i<_count; i++){
-            _ledstring.channel[0].brightness = 0;
-        }
-        //_count =  0;
-        //_ledstring.channel[0].count = _count;
         _render();
     }
 
@@ -126,10 +119,7 @@ private:
 
     void _render()
     {
-        //LOG(LOG_DEBUG, "Rendering");
         ws2811_render(&_ledstring);
-        //LOG(LOG_DEBUG, "Rendered");
-        // TODO add error checking
     }
 
 };

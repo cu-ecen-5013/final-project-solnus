@@ -25,6 +25,10 @@ ifeq ($(EXTRA_CXXFLAGS),)
 	EXTRA_CXXFLAGS = -Wall -Werror -std=c++17 -I. -I$(STAGING_DIR)/usr/include/azureiot -DAZURE_DEVICE_KEY=\"$(AZURE_DEVICE_KEY)\" -DAZURE_DEVICE_NAME=\"$(AZURE_DEVICE_NAME)\"
 endif
 
+ifeq ($(EXTRA_LDFLAGS),)
+	EXTRA_LDFLAGS = -lconfig
+endif
+
 
 # If building from buildroot, linking happens differently
 ifeq ($(BR2_CONFIG),)
@@ -36,7 +40,7 @@ endif
 all: $(BUILD_DIR) $(BIN_FILE)
 
 $(BIN_FILE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(EXTRA_CXXFLAGS) -o $@ $^ $(INCLUDES) -L$(STAGING_DIR)/usr/lib $(LDFLAGS) $(AZURELIBS)
+	$(CXX) $(CXXFLAGS) $(EXTRA_CXXFLAGS) -o $@ $^ $(INCLUDES) -L$(STAGING_DIR)/usr/lib $(LDFLAGS) $(AZURELIBS) $(EXTRA_LDFLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(EXTRA_CXXFLAGS) -c -o $@ -MMD -MT '$@' -MF $(@:%.o=%.d) $<

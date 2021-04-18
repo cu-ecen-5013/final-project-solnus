@@ -6,7 +6,7 @@ Building the applications outside buildroot requires manual installation of some
 
 1. Install build tools
 
-```sudo apt-get install install cmake build-essential scons git libcurl4-openssl-dev libssl-dev uuid-dev```
+```sudo apt-get install install cmake build-essential scons git libcurl4-openssl-dev libssl-dev uuid-dev libconfig-dev```
 
 2. Install Azure IoT SDK for C
 ```
@@ -17,14 +17,10 @@ sudo apt-get update
 sudo apt-get install -y azure-iot-sdk-c-dev
 ```
 
-# Building webapp
-1. Install build tools
+# Running webapp
+1. Testing webapp locally
 
-```sudo apt-get install nodejs-dev node-gyp npm libssl1.0-dev```
-
-2. Testing webapp locally
-
-```cd webapp && npm start```
+```cd webapp && node start```
 ```[open localhost:3000 in browser]```
 
 # Repository Overview
