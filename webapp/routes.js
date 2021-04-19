@@ -6,7 +6,7 @@ var router = express.Router();
 var Client = require('azure-iothub').Client;
 var Message = require('azure-iot-common').Message;
 
-var deviceNames = ['ecen5713-iot-edge', 'LEDControlSvc2'];
+var deviceNames = ['ecen5713-iot-edge', 'LEDControlSvc1'];
 
 var serviceConnStr = 'HostName=ecen5713-iot-hub.azure-devices.net;SharedAccessKeyName=service;SharedAccessKey=Gply81vOUaYpgBujYD0xhIk13xzExrKSf0EDvTW0LDA=';
 var serviceClient = Client.fromConnectionString(serviceConnStr);

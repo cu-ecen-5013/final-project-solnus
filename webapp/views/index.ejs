@@ -81,8 +81,8 @@
             });
         });
     </script>
-
-    <form action="/command" method="post">
+    <iframe style="display:none" name="hidden-form"></iframe>
+    <form action="/command" method="post" target="hidden-form">
         <div class="group">
             <select name="device" id="device">
                 <option value="device0">Device 0</option>
