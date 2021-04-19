@@ -51,6 +51,7 @@ private:
     LEDControl& _ctrlObj;
     IOTHUB_DEVICE_CLIENT_LL_HANDLE _device_ll_handle;
     bool _running = false;
+    uint32_t _velocity = 0;
     
     // Member functions
     void _run();

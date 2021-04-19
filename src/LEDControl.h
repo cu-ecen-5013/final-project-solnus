@@ -35,10 +35,10 @@ public:
             uint32_t wrgb;
             struct
             {
-                uint8_t white;
-                uint8_t red;
-                uint8_t green;
                 uint8_t blue;
+                uint8_t green;
+                uint8_t red;
+                uint8_t white;
             };
         };
     } __attribute__ ((packed)) led_t;
@@ -72,13 +72,6 @@ public:
     }
 
     ~LEDControl() = default;
-    void setNumLED (uint16_t _ledCount)
-    {
-        LOG(LOG_INFO, "Setting number of LED to %d", _ledCount);
-        _count = _ledCount;
-        _ledstring.channel[0].count = _count;
-        _render();
-    }
 
     void setIntensity(float intensity)
     {
@@ -106,8 +99,65 @@ public:
     void setColor(led_t color)
     {
         LOG(LOG_INFO, "Setting all to color");
-        for (int i = 0; i<_count; i++){
+        for (int i = 0; i < _count; i++)
+        {
             _ledstring.channel[0].leds[i] = color.wrgb;
+        }
+        _render();
+    }
+
+    void adjustColor(uint32_t velocity)
+    {
+        led_t led_velocity;
+        led_velocity.wrgb = velocity;
+
+        for(int i = 0; i < _count; i++)
+        {
+            led_t led;
+            led.wrgb = _ledstring.channel[0].leds[i];
+            
+            if(led.red > 64 && led_velocity.red < 0xF0) led_velocity.red = -led_velocity.red;
+            if(led.green > 64 && led_velocity.green < 0xF0) led_velocity.green = -led_velocity.green;
+            if(led.blue > 64 && led_velocity.blue < 0xF0) led_velocity.blue = -led_velocity.blue;
+
+            if(led.red < 8 && led_velocity.red > 0xF0) led_velocity.red = -led_velocity.red;
+            if(led.green < 8 && led_velocity.green > 0xF0) led_velocity.green = -led_velocity.green;
+            if(led.blue < 8 && led_velocity.blue > 0xF0) led_velocity.blue = -led_velocity.blue;
+
+            led.red = (led.red + led_velocity.red);
+            led.green = (led.green + led_velocity.green);
+            led.blue = (led.blue + led_velocity.blue);
+
+            _ledstring.channel[0].leds[i] = led.wrgb;
+        }
+        _render();
+    }
+
+    void setColorGradient(led_color_e initial, uint32_t velocity)
+    {
+        led_t color;
+        color.wrgb = initial;
+        setColorGradient(color, velocity);
+    }
+
+    void setColorGradient(led_t initial, uint32_t velocity)
+    {
+        led_t led_velocity;
+        led_velocity.wrgb = velocity;
+
+        led_t led = initial;
+
+        for(int i = 0; i < _count; i++)
+        {
+            _ledstring.channel[0].leds[i] = led.wrgb;
+
+            if((uint8_t)(led.red + led_velocity.red) > 64) led_velocity.red = -led_velocity.red;
+            if((uint8_t)(led.green + led_velocity.green) > 64) led_velocity.green = -led_velocity.green;
+            if((uint8_t)(led.blue + led_velocity.blue) > 64) led_velocity.blue = -led_velocity.blue;
+
+            led.red += led_velocity.red;
+            led.green += led_velocity.green;
+            led.blue += led_velocity.blue;
         }
         _render();
     }

@@ -58,8 +58,8 @@ int main(const int argc, char** argv)
     parseOpts(argc, argv);
 
     LEDControl ctrlObj(_ledCount);
-    ctrlObj.setColor(LEDControl::LED_G);
-    ctrlObj.setIntensity(0.1);
+    ctrlObj.setColorGradient(LEDControl::LED_G, 0x0002FE01);
+    ctrlObj.setIntensity(0.3);
 
     LEDControlSvc_RC remoteCtrlObj(_connStr, ctrlObj);
     remoteCtrlObj.start();
@@ -68,10 +68,10 @@ int main(const int argc, char** argv)
         pause();
     }
 
-    LOG(LOG_INFO, "Stopping service"); 
+    LOG(LOG_INFO, "Stopping service");
     remoteCtrlObj.stop();
     ctrlObj.setIntensity(0);
-    LOG(LOG_INFO, "Stopped service"); 
+    LOG(LOG_INFO, "Stopped service");
     return 0;
 }
 

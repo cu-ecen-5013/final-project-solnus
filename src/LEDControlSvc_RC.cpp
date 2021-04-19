@@ -82,21 +82,44 @@ void LEDControlSvc_RC::_handle_message(const unsigned char* buffer, size_t size)
 
     LOG(LOG_DEBUG, "Received String Message: %s", string_msg);
 
-    if(strstr(string_msg, "intensity2"))
+    const char* cmd = strtok(string_msg, " #");
+    const char* arg = strtok(NULL, " #");
+
+    if(cmd == nullptr)
     {
-        _ctrlObj.setIntensity(0.2);
+        LOG(LOG_ERR, "Failed to find a command in the string");
+        return;
     }
-    else if(strstr(string_msg, "intensity5"))
+
+    if(strcmp(cmd, "intensity") == 0)
     {
-        _ctrlObj.setIntensity(0.5);
+        uint32_t intensity = strtoul(arg, nullptr, 10);
+        _ctrlObj.setIntensity(intensity / 100.0);
     }
-    else if(strstr(string_msg, "colorg"))
+    else if(strcmp(cmd, "color") == 0)
     {
-        _ctrlObj.setColor(LEDControl::LED_G);
+        LEDControl::led_t led;
+        led.wrgb = strtoul(arg, nullptr, 16);
+        _ctrlObj.setColor(led);
     }
-    else if(strstr(string_msg, "colorr"))
+    else if(strcmp(cmd, "preset") == 0)
     {
-        _ctrlObj.setColor(LEDControl::LED_R);
+        if(strcmp(arg, "preset0") == 0)
+        {
+            _ctrlObj.setColorGradient(LEDControl::LED_G, 0x0002FE01);
+        }
+        else if(strcmp(arg, "preset1") == 0)
+        {
+            _ctrlObj.setColorGradient(LEDControl::LED_B, 0x0002FE01);
+        }
+        else if(strcmp(arg, "preset2") == 0)
+        {
+            _ctrlObj.setColorGradient(LEDControl::LED_R, 0x0002FE01);
+        }
+        else if(strcmp(arg, "preset3") == 0)
+        {
+            _ctrlObj.setColorGradient(LEDControl::LED_R, 0x00000608);
+        }
     }
 }
 
