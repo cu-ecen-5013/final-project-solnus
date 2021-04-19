@@ -23,7 +23,7 @@ sudo apt-get install -y azure-iot-sdk-c-dev
 ```cd webapp && node start```
 ```[open localhost:3000 in browser]```
 
-```Deployed Link https://ecen-ledcontrol.herokuapp.com/```
+```[Deployed Web App](https://ecen-ledcontrol.herokuapp.com/)```
 # Repository Overview
 [Project Overview](https://github.com/cu-ecen-5013/final-project-JiabinLin12/wiki/Project-Overview)
 
