@@ -3,15 +3,23 @@
 <head>
     <style>
     h1 {text-align: center; 
-        color: #0BECDF}
+        color: #0BECDF;
+        font-size: 50px;
+        background: -webkit-linear-gradient(#ff0000, #00ff00,#0000FF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        }
     body {
+        vertical-align: middle;
         background-color: #9C09E5;
         text-align: center;
+        margin: auto;
+        height: 90%;
     }
     .button {
         background-color: #4CAF50;
         color: white;
-        padding: 3px 50px;
+        padding: 1px 17px;
         text-align: center;
         text-decoration: none;
         display: inline-block;
@@ -21,7 +29,9 @@
         border:2px solid #000;
     }
     .group {
-        margin-bottom: 20px;
+        zoom: 2.0;
+        -moz-transform: scale(2.0);
+        margin-bottom: 100px;
     }
     .group label {
         font-size: 22px;
@@ -100,8 +110,8 @@
                     <option value="preset2">Preset 2</option>
                     <option value="preset3">Preset 3</option>
                 </select>
-                <input style="width:140px;" type="color" name="color" id="clrpik" value="<% if(locals.req){ __append(req.body.color); } else { __append("#ff0000"); } %>">
-                <input style="font-size:20px; width:150px;" type="text" name="commandstr" id = "commandstr">
+                <input style="width:130px; height: 20px;" type="color" name="color" id="clrpik" value="<% if(locals.req){ __append(req.body.color); } else { __append("#ff0000"); } %>">
+                <input style="font-size:20px; width:120px;" type="text" name="commandstr" id = "commandstr">
             </div>
             <button type="submit" class="button">Send</button>
         </div>
